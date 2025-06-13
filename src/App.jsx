@@ -1,30 +1,46 @@
+import { useEffect, useState } from "react";
 import "./App.css";
-import { useState } from "react";
 
 function App() {
   const [task, setTask] = useState("");
   const [todos, setTodos] = useState([]);
 
-  const addTask = () => {
+  // Fetch tasks from backend
+  const fetchTasks = async () => {
+    const res = await fetch("http://localhost:5000/todos");
+    const data = await res.json();
+    setTodos(data);
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const addTask = async () => {
     if (task.trim() !== "") {
-      const newTask = { text: task, completed: false };
-      setTodos([...todos, newTask]);
+      await fetch("http://localhost:5000/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: task }),
+      });
       setTask("");
-      //alert("Task added!");
+      fetchTasks();
     }
   };
 
-  const deleteTask = (index) => {
-    const newTodos = todos.filter((_, i) => i !== index);
-    setTodos(newTodos);
-    alert("Task deleted!");
+  const deleteTask = async (index) => {
+    await fetch(`http://localhost:5000/todos/${index}`, {
+      method: "DELETE",
+    });
+    fetchTasks();
   };
 
-  const toggleComplete = (index) => {
-    const updatedTodos = todos.map((item, i) =>
-      i === index ? { ...item, completed: !item.completed } : item
-    );
-    setTodos(updatedTodos);
+  // Toggle complete
+  const toggleComplete = async (index) => {
+    await fetch(`http://localhost:5000/todos/${index}`, {
+      method: "PUT",
+    });
+    fetchTasks();
   };
 
   return (
@@ -57,7 +73,7 @@ function App() {
                   item.completed ? "completed-btn" : ""
                 }`}
               >
-                {item.completed ? "completed" : "✔️"}
+                {item.completed ? "Completed" : "✔️"}
               </button>
               <button onClick={() => deleteTask(index)} className="delete-btn">
                 ❌
